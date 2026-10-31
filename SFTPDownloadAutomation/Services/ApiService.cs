@@ -205,7 +205,7 @@ public class ApiService
 
     private static readonly Regex FileNameRegex =
        new(
-           @"^(?<prefix>.+)_(?<batchId>\d+)\.(?<type>SRC|UPL|DWN)(?:\.RES)?\.(?<extension>zip|err)$",
+           @"^(?<prefix>.+)_(?<batchId>\d+)\.(?<type>SRC|UPL|DWN|UPD)(?:\.RES\d*)?\.(?<extension>zip|err)$",
            RegexOptions.IgnoreCase |
            RegexOptions.Compiled |
            RegexOptions.CultureInvariant);
@@ -298,6 +298,7 @@ public class ApiService
                 "SRC" => "Search",
                 "UPL" => "Registration",
                 "DWN" => "Download",
+                "UPD"  => "Update",
                 _ => string.Empty
             };
 
