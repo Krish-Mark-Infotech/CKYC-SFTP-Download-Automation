@@ -114,73 +114,19 @@ public class ApiService
 
 
     public async Task<bool> ProcessFileAsync(
-       string filePath,
+       string filePath, DatabaseService databaseService,
        CancellationToken cancellationToken = default)
     {
+
+        ParsedFileInfo obj2=new ParsedFileInfo();
         try
         {
-            //_logger.LogInformation(
-            //    "API processing started for {FilePath}.",
-            //    filePath);
-
-            //if (string.IsNullOrWhiteSpace(_apiSettings.ProcessFileEndpoint))
-            //{
-            //    _logger.LogError(
-            //        "API endpoint is not configured. Set ApiSettings:ProcessFileEndpoint in appsettings.json.");
-
-            //    return false;
-            //}
-
-            //if (_httpClient.BaseAddress is null &&
-            //    !Uri.TryCreate(
-            //        _apiSettings.ProcessFileEndpoint,
-            //        UriKind.Absolute,
-            //        out _))
-            //{
-            //    _logger.LogError(
-            //        "API BaseUrl is not configured. Set ApiSettings:BaseUrl in appsettings.json or use an absolute ProcessFileEndpoint.");
-
-            //    return false;
-            //}
-
-            //await using FileStream fileStream =
-            //    File.OpenRead(filePath);
+            
 
             using var formData =
                 new MultipartFormDataContent();
 
-            //using var fileContent =
-            //    new StreamContent(fileStream);
-
-            //fileContent.Headers.ContentType =
-            //    new MediaTypeHeaderValue(
-            //        "application/octet-stream");
-
-            //formData.Add(
-            //    fileContent,
-            //    _apiSettings.FileFormFieldName,
-            //    Path.GetFileName(filePath));
-
-            //using HttpResponseMessage response =
-            //    await _httpClient.PostAsync(
-            //        _apiSettings.ProcessFileEndpoint,
-            //        formData,
-            //        cancellationToken);
-
-            //if (!response.IsSuccessStatusCode)
-            //{
-            //    string responseBody =
-            //        await response.Content.ReadAsStringAsync(
-            //            cancellationToken);
-
-            //    _logger.LogError(
-            //        "API returned failure for {FilePath}. StatusCode = {StatusCode}, Response = {Response}",
-            //        filePath,
-            //        response.StatusCode,
-            //        responseBody);
-
-            //    return false;
-            //}
+            
 
             string Filename = Path.GetFileName(filePath);
 
@@ -191,6 +137,8 @@ public class ApiService
                   out string errorCode,
                   out string errorMessage))
             {
+
+                await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RF", cancellationToken);
                 _logger.LogWarning(
                     "File validation failed. FileName={FileName}, ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}",
                     Filename,
@@ -199,6 +147,8 @@ public class ApiService
 
             }
 
+            obj2 = parsedFile;
+            await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RI", cancellationToken);
 
 
             string? rootOutputPath =
@@ -237,11 +187,13 @@ public class ApiService
                 filePath,
                 destinationFilePath);
 
-
+            await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RS", cancellationToken);
             return true;
         }
         catch (Exception ex)
         {
+
+            await databaseService.UpdateMoveStatusCSRBatchAsync(obj2.BatchId, "RF", cancellationToken);
             _logger.LogError(
                 ex,
                 "API processing failed for {FilePath}.",

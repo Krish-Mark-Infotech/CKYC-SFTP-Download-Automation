@@ -239,6 +239,41 @@ public class DatabaseService
             moveStatus);
     }
 
+    public async Task UpdateMoveStatusCSRBatchAsync(
+   string CSRBatchID,
+   string moveStatus,
+   CancellationToken cancellationToken = default)
+    {
+        const string query = """
+         Update CKYC..MW_CSR_BATCH_DTLS  
+         set status =@MoveStatus where CSRBatchID=@CSRBatchID;
+        """;
+
+        await using var connection =
+            new SqlConnection(_connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command =
+            new SqlCommand(query, connection);
+
+        command.Parameters.AddWithValue(
+            "@CSRBatchID",
+            CSRBatchID);
+
+        command.Parameters.AddWithValue(
+            "@MoveStatus",
+            moveStatus);
+
+        await command.ExecuteNonQueryAsync(
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Updated {FileName} status to {MoveStatus}.",
+            CSRBatchID,
+            moveStatus);
+    }
+
     public async Task UpdateBatchWiseAuditDetailsForFileGenerationAsync(
     string mwBatchId,
     string createdBy,

@@ -350,6 +350,7 @@ public class FileProcessingService
                                 "I",
                                 cancellationToken);
 
+                            
                             _logger.LogInformation(
                                 "File marked In Progress: {FileName}",
                                 fileName);
@@ -372,7 +373,7 @@ public class FileProcessingService
 
                             bool success =
                                 await _apiService.ProcessFileAsync(
-                                    filePath,
+                                    filePath,_databaseService,
                                     cancellationToken);
 
                             // ------------------------------------------
