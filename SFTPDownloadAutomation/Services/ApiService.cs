@@ -138,7 +138,7 @@ public class ApiService
                   out string errorMessage))
             {
 
-                await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RF", cancellationToken);
+               // await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RF", cancellationToken);
                 _logger.LogWarning(
                     "File validation failed. FileName={FileName}, ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}",
                     Filename,
@@ -148,7 +148,7 @@ public class ApiService
             }
 
             obj2 = parsedFile;
-            await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RI", cancellationToken);
+          //  await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RI", cancellationToken);
 
 
             string? rootOutputPath =
@@ -187,13 +187,13 @@ public class ApiService
                 filePath,
                 destinationFilePath);
 
-            await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RS", cancellationToken);
+            //await databaseService.UpdateMoveStatusCSRBatchAsync(parsedFile.BatchId, "RS", cancellationToken);
             return true;
         }
         catch (Exception ex)
         {
 
-            await databaseService.UpdateMoveStatusCSRBatchAsync(obj2.BatchId, "RF", cancellationToken);
+           // await databaseService.UpdateMoveStatusCSRBatchAsync(obj2.BatchId, "RF", cancellationToken);
             _logger.LogError(
                 ex,
                 "API processing failed for {FilePath}.",
