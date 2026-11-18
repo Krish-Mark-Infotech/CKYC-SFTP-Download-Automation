@@ -1,3 +1,6 @@
+using Microsoft.Data.SqlClient;              // <-- ADDED
+using Microsoft.Extensions.Configuration;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,15 +15,18 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly SchedulerSettings _schedulerSettings;
     private readonly SemaphoreSlim _jobLock = new(1, 1);
+    private readonly IConfiguration _configuration; //add by sahil on 13nov26
 
     public Worker(
         FileProcessingService fileProcessingService,
         IOptions<SchedulerSettings> schedulerSettings,
-        ILogger<Worker> logger)
+        ILogger<Worker> logger,
+        IConfiguration configuration)
     {
         _fileProcessingService = fileProcessingService;
         _schedulerSettings = schedulerSettings.Value;
         _logger = logger;
+         _configuration = configuration; //add by sahil on 13nov26
     }
 
     protected override async Task ExecuteAsync(
@@ -70,6 +76,8 @@ public class Worker : BackgroundService
             return;
         }
 
+        DateTime startTime = DateTime.Now; //add by sahil on 13nov26
+
         try
         {
             _logger.LogInformation(
@@ -95,6 +103,30 @@ public class Worker : BackgroundService
         }
         finally
         {
+            //add by sahil on 13nov26
+            try
+            {
+                DateTime endTime = DateTime.Now;
+
+                using SqlConnection conn = new SqlConnection(
+                    _configuration.GetConnectionString("UPDDWNLDataBase"));
+
+                using SqlCommand cmd = new SqlCommand(
+                    "INSERT INTO MST_JOB_TRCKNG_DTLS (JB_NAME, STRT_TM, END_TM, DURATN) VALUES ('SFTPDownloadAutomation', @start, @end, @dur)",
+                    conn);
+
+                cmd.Parameters.AddWithValue("@start", startTime);
+                cmd.Parameters.AddWithValue("@end", endTime);
+                cmd.Parameters.AddWithValue("@dur", endTime - startTime); // TimeSpan -> SQL TIME
+
+                conn.Open();
+                await cmd.ExecuteNonQueryAsync(stoppingToken);
+            }
+            catch (Exception trackEx)
+            {
+                _logger.LogError(trackEx, "Failed to log job tracking to MST_JOB_TRCKNG_DTLS.");
+            }
+            //end by sahil on 13nov26
             _jobLock.Release();
         }
     }
